@@ -1,0 +1,9 @@
+.cursor-pointer{
+    cursor: pointer;
+}
+.m-none{
+    margin: unset;
+}
+html, body{
+    height: 100%;
+}
