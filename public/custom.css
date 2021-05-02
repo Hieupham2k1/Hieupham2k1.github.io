@@ -1,6 +1,12 @@
 .cursor-pointer{
     cursor: pointer;
 }
+.text-left{
+    text-align: left;
+}
+.text-right{
+    text-align: right;
+}
 .m-none{
     margin: unset;
 }

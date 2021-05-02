@@ -12,7 +12,7 @@
 			</div>
 			<div class="col-12 col-md-8">
 				<h5>About Me</h5>
-				<div class="text-light">
+				<div class="text-light text-left">
 					-I'm studying Computer Enginering at Hanoi University of Science and Technology.<br>
 					-I have exprerience in Web Development since March 2020.<br>
 					-I can read and use English Technology Documents.<br>
