@@ -16,9 +16,48 @@ const routes = [
 		component: () => import('../views/Navs/Projects.vue'),
 		children: [
 			{
-				path: '/cats',
+				path: 'cats',
 				name: 'Cats',
 				component: () => import('../views/Cats/Master.vue'),
+			},
+			{
+				path: 'matrix',
+				name: 'Matrix',
+				component: () => import('../views/Matrix/Master.vue'),
+				children: [
+					{
+						path: '/',
+						name: 'Multiply',
+						component: () => import('../views/Matrix/Multiply.vue'),
+					},
+					{
+						path: 'add',
+						name: 'Add',
+						component: () => import('../views/Matrix/Add.vue'),
+					},
+					{
+						path: 'invert',
+						name: 'Invert',
+						component: () => import('../views/Matrix/Invert.vue'),
+					},
+				],
+			},
+			{
+				path: 'tanks',
+				name: 'Tanks',
+				component: () => import('../views/Tanks/Master.vue'),
+				children: [
+					{
+						path: '/',
+						name: 'Login',
+						component: () => import('../views/Tanks/Login.vue'),
+					},
+					{
+						path: ':roomId/:tankId',
+						name: 'Room',
+						component: () => import('../views/Tanks/Room.vue'),
+					},
+				],
 			},
 		],
 	},

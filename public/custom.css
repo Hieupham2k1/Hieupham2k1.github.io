@@ -7,6 +7,12 @@
 .text-right{
     text-align: right;
 }
+.box-center{
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .m-none{
     margin: unset;
 }

@@ -1,14 +1,14 @@
 <template>
     <div>
-        <center @click="showExplainModal = !showExplainModal" v-if="showExplainModal" class="card explain-modal">
-            <center class="card-body">
-                <div>
-                    This is a simple Single Page Web use public service API from 
-                    <a href="https://thecatapi.com/" target="_blank">The Cat API</a> 
-                    to fetch kitties's cutest pictures.
-                </div>
+    <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <center class="modal-content">
+                This is a simple Single Page Web use public service API from 
+                <a href="https://thecatapi.com/" target="_blank">The Cat API</a> 
+                to fetch kitties's cutest pictures.
             </center>
-        </center>
+        </div>
+    </div>
         <aside class="side-bar p-md-3">
             <div>
                 <label>Category: </label>
@@ -25,9 +25,9 @@
                     <option v-for="(breed, index) in breeds" :key="breed.id" :value="index">{{ breed.name }}</option>
                 </select>
             </div>
-            <div @click="showExplainModal = !showExplainModal" class="card cursor-pointer">
+            <div class="card cursor-pointer" data-toggle="modal" data-target=".bd-example-modal-lg">
                 <div class="card-header bg-secondary text-light">
-                    What<span class="d-none d-sm-inline"> is this?</span>
+                    <small>What<span class="d-none d-sm-inline"> is this?</span></small>
                 </div>
             </div>
         </aside>
@@ -77,7 +77,6 @@ export default {
             breeds: [],
             selectedBreed: null,
             hasNoData: false,
-            showExplainModal: false,
         }
     },
     methods:{
@@ -156,15 +155,6 @@ export default {
     img{
         width: 100%;
         border-radius: 20px;
-    }
-    .explain-modal{
-        position: fixed;
-        top:0;
-        left:0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
     }
     .card-body{
         background: white;
