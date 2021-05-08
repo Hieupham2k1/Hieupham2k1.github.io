@@ -1,6 +1,6 @@
 <template>
     <div class="row my-3">
-        <aside class="side-bar p-md-3 col-12 col-md-3 order-3 order-md-1">
+        <aside class="side-bar p-lg-3 col-12 col-lg-3 order-3 order-lg-1">
             <div class="my-3 text-center">Chat Box</div>
             <div class="message-container">
                 <div v-for="(message, index) in messages" :key="index" class="d-flex my-3"
@@ -21,7 +21,7 @@
             </div>
         </aside>
 
-        <div class="content col-12 col-md-6 order-2">
+        <div class="content col-12 col-lg-6 order-2">
             <div id="field">
                 <Tank v-for="(tank, id) in tanks" :key="id"
                     :ref="id" :id="id" 
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <aside class="col-12 col-md-3 order-5 overflow-auto" style="height: 500px;">
+        <aside class="col-12 col-lg-3 order-5 overflow-auto" style="height: 500px;">
             <div>How to move:</div>
             <div class="mx-3">
                 <div>W: move forward</div>
@@ -412,5 +412,10 @@ export default {
         width: 100vw;
         position: fixed;
         bottom: 0;
+        z-index: 1000;
+        pointer-events: none;
+    }
+    .btn{
+        pointer-events: all;
     }
 </style>

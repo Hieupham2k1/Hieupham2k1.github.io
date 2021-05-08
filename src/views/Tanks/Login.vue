@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="row justify-content-center">
-            <div class="card p-3 col-12 col-md-8">
+            <div class="card p-3 col-12 col-lg-8">
                 <div class="card-header text-center my-3">Join a Room!</div>
                 <div>
                     <label>Room ID:</label><input v-model="roomId" @keypress.enter="enter()" type="text" class="form-control">
