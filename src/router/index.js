@@ -57,6 +57,11 @@ const routes = [
 						name: 'Room',
 						component: () => import('../views/Tanks/Room.vue'),
 					},
+					{
+						path: ':roomId/:tankId/delete',
+						name: 'Delete',
+						component: () => import('../views/Tanks/Delete.vue'),
+					},
 				],
 			},
 		],

@@ -70,9 +70,12 @@
                 <div>-block can be used to block bullet</div>
                 <div>-if health &lt; 10, health + 1 after 10s</div>
                 <div>-if health = 0, you can not shoot</div>
+                <router-link :to="{ name: 'Delete', params:{ roomId, tankId } }">
+                    Delete your tank
+                </router-link>
             </div>
         </aside>
-        <div class="joystick row d-xl-none">
+        <div class="joystick row d-lg-none">
             <div class="col">
                 <div class="d-flex justify-content-center my-3">
                     <button @touchstart="buttonDown('KeyW')" @touchend="buttonUp('KeyW')" @mouseup="quickDispatch('KeyW')" class="btn btn-secondary">
@@ -114,7 +117,7 @@
 
 <script>
 import { firebaseInit } from '@/api/firebase.js';
-import Tank from './Tank.vue';
+import Tank from '@/components/Tanks/Tank.vue';
 export default {
     components: {
         Tank,
@@ -125,22 +128,13 @@ export default {
             roomId: '',
             tankId: '',
             step: 10,
-            tanks: {
-                tank1:{
-                    position:{
-                        top: 0,
-                        left: 0,
-                        rotate: 0,
-                    },
-                    bullets: 10,
-                    jump: 0,
-                    block: 0,
-                    health: 10,
-                },
-            },
+            tanks: {},
             newMessage: '',
             messages: [],
             pressedKeys: {},
+            newMessageInterval: {},
+            bulletInterval: {},
+            dispatchInterval: {},
         }
     },
     methods:{
@@ -155,6 +149,7 @@ export default {
             this.pressedKeys[code] = false;
         },
         dispatch(){
+            if(!this.tanks[this.tankId]) return;
             let tankPos = this.tanks[this.tankId].position;
             let tankObject = this.$refs[this.tankId][0];
             let hasChange = false;
@@ -262,6 +257,13 @@ export default {
                     let messageContainer = document.querySelector('.message-container');
                     messageContainer.scrollTop = messageContainer.scrollHeight;
                 });
+                if(this.messages[this.messages.length - 1]?.id != this.tankId){
+                    this.newMessageInterval = setInterval(() => {
+                        let title = document.title;
+                        if(title.indexOf('(1)') != -1) document.title = title.replace('(1)', '');
+                        else document.title = '(1)' + document.title;
+                    }, 2000);
+                }
             });
         },
         getElementPosition(id){
@@ -327,6 +329,8 @@ export default {
         stopKeyListen(){
             window.onkeydown = null;
             window.onkeyup = null;
+            clearInterval(this.newMessageInterval);
+            document.title = document.title.replace('(1)', '');
         },
         resize(){
             let joystick = document.querySelector('.joystick');
@@ -342,13 +346,13 @@ export default {
     },
     mounted(){
         this.startKeyListen();
-        setInterval(() => {
+        this.bulletInterval = setInterval(() => {
             let tank = this.tanks[this.tankId];
             this.tanks[this.tankId].bullets = (isNaN(tank.bullets)) ? 0 : tank.bullets + 1; 
             if(tank.health < 10) this.tanks[this.tankId].health++;
             this.setTankInfo(this.tankId);
         }, 10000);
-        setInterval(() => {
+        this.dispatchInterval = setInterval(() => {
             this.dispatch();
         }, 50);
         window.onresize = () => this.resize();
@@ -356,6 +360,8 @@ export default {
     },
     destroyed(){
         this.stopKeyListen();
+        clearInterval(this.bulletInterval);
+        clearInterval(this.dispatchInterval);
     }
 }
 </script>
