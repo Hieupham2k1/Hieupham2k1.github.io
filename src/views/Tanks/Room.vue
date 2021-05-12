@@ -9,6 +9,16 @@
                     <span class="message-id">{{ message.id }}</span><span class="mx-1">:</span>
                     <span class="message-content" :class="(message.id == tankId) ? 'bg-primary' : 'bg-secondary'">{{ message.content }}</span>
                 </div>
+                <small v-if="seenBy.length > 0 && !(seenBy.length == 1 && seenBy[0] == tankId)">seen by: 
+                    <span v-for="index in 3" :key="index">
+                        <span v-if="seenBy[index - 1] && seenBy[index - 1] != tankId">
+                            {{ seenBy[index - 1] }},
+                        </span>
+                    </span>
+                    <span v-if="seenBy.length > 3">
+                        and {{ seenBy.length - 3 }} other<span v-if="seenBy.length > 4">s</span>.
+                    </span>
+                </small>
             </div>
             <div class="d-flex mb-3">
                 <input v-model="newMessage" 
@@ -44,7 +54,7 @@
                 <div>W: move forward</div>
                 <div>S: move backward</div>
                 <div>I: turn left</div>
-                <div>E: turn right</div>
+                <div>O: turn right</div>
                 <div>J: shoot</div>
                 <div>K: jump</div>
                 <div>L: block</div>
@@ -70,10 +80,10 @@
                 <div>-block can be used to block bullet</div>
                 <div>-if health &lt; 10, health + 1 after 10s</div>
                 <div>-if health = 0, you can not shoot</div>
-                <router-link :to="{ name: 'Delete', params:{ roomId, tankId } }">
-                    Delete your tank
-                </router-link>
             </div>
+            <router-link :to="{ name: 'Delete', params:{ roomId, tankId } }">
+                Delete your tank
+            </router-link>
         </aside>
         <div class="joystick row d-lg-none">
             <div class="col">
@@ -132,9 +142,10 @@ export default {
             newMessage: '',
             messages: [],
             pressedKeys: {},
-            newMessageInterval: {},
+            newMessageInterval: null,
             bulletInterval: {},
             dispatchInterval: {},
+            seenBy: [],
         }
     },
     methods:{
@@ -257,13 +268,23 @@ export default {
                     let messageContainer = document.querySelector('.message-container');
                     messageContainer.scrollTop = messageContainer.scrollHeight;
                 });
-                if(this.messages[this.messages.length - 1]?.id != this.tankId){
+                this.newMessageRead();
+                if(document.hidden && this.messages[this.messages.length - 1]?.id != this.tankId){
                     this.newMessageInterval = setInterval(() => {
                         let title = document.title;
                         if(title.indexOf('(1)') != -1) document.title = title.replace('(1)', '');
                         else document.title = '(1)' + document.title;
                     }, 2000);
                 }
+                if(!document.hidden){
+                    this.seen(); // some bugs remain
+                }
+            });
+
+            this.db.collection('rooms').doc(this.roomId).collection('messages').doc('meta')
+            .onSnapshot((doc) => {
+                let data = doc.data();
+                this.seenBy = data.seenBy ? data.seenBy : [];
             });
         },
         getElementPosition(id){
@@ -315,22 +336,41 @@ export default {
                 time: Date.now(),
             })
             .then((docRef) => {
+                this.db.collection('rooms').doc(this.roomId).collection('messages').doc('meta').set({ seenBy: [] })
+                .then((docRef) => {
+                })
+                .catch((error) => {
+                    console.error("Error adding document: ", error);
+                });
             })
             .catch((error) => {
                 this.newMessage = newMessage;
                 console.error("Error adding document: ", error);
             });
         },
+        newMessageRead(){
+            clearInterval(this.newMessageInterval);
+            this.newMessageInterval = null;
+            document.title = document.title.replace('(1)', '');
+        },
+        seen(){
+            this.newMessageRead();
+            if(!this.seenBy.includes(this.tankId)) this.seenBy.push(this.tankId);
+            this.db.collection('rooms').doc(this.roomId).collection('messages').doc('meta').set({ seenBy: this.seenBy })
+            .then((docRef) => {
+            })
+            .catch((error) => {
+                console.error("Error adding document: ", error);
+            });
+        },
         startKeyListen(){
-            
             window.onkeydown = e => this.pressedKeys[e.code] = true;
             window.onkeyup = e => this.pressedKeys[e.code] = false;
         },
         stopKeyListen(){
             window.onkeydown = null;
             window.onkeyup = null;
-            clearInterval(this.newMessageInterval);
-            document.title = document.title.replace('(1)', '');
+            this.newMessageRead();
         },
         resize(){
             let joystick = document.querySelector('.joystick');
@@ -346,15 +386,24 @@ export default {
     },
     mounted(){
         this.startKeyListen();
+
         this.bulletInterval = setInterval(() => {
             let tank = this.tanks[this.tankId];
             this.tanks[this.tankId].bullets = (isNaN(tank.bullets)) ? 0 : tank.bullets + 1; 
             if(tank.health < 10) this.tanks[this.tankId].health++;
             this.setTankInfo(this.tankId);
         }, 10000);
+
         this.dispatchInterval = setInterval(() => {
             this.dispatch();
         }, 50);
+
+        document.addEventListener("visibilitychange", () => {
+            if(!document.hidden){
+                this.seen();
+            }
+        });
+
         window.onresize = () => this.resize();
         this.resize();
     },
