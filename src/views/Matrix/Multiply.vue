@@ -7,7 +7,7 @@
         </select>
 
         <div class="row overflow-auto">
-            <div class="col-12 col-md-3 box-center overflow-auto">
+            <div class="col-12 box-center overflow-auto">
                 <div class="d-flex justify-content-center my-1">
                     <span class="box-center">Size: </span>
                     <input @input="changeMatrixOneHeight" :value="matrixOneHeight" class="w-50px form-control" />
@@ -15,21 +15,19 @@
                     <input @input="changeMatrixOneWidth" :value="matrixOneWidth" class="w-50px form-control" />
                 </div>
 
-                <div v-for="row in matrixOneHeight" :key="row" class="d-flex">
-                    <span v-for="col in matrixOneWidth" :key="row+'-'+col" class="mx-1">
-                        <input v-model="matrix1[row - 1][col - 1]" class="w-50px form-control" />
-                    </span>
-                </div>
-
-                <center class="my-1">
-                    <button @click="$emit('copy', matrix1)" class="btn btn-success">Copy</button>
-                    <button @click="pasteMatrix('matrix1')" class="btn btn-warning">Paste</button>
-                </center>
+                <Matrix 
+                    :matrix="matrix1"
+                    :height="matrixOneHeight"
+                    :width="matrixOneWidth"
+                    :disabled="false"
+                    @copy="$emit('copy', matrix1)"
+                    @paste="pasteMatrix('matrix1')"
+                />
             </div>
 
-            <div v-if="mode != 3" class="col-12 col-md-1 box-center my-5 my-md-4">*</div>
+            <div v-if="mode != 3" class="box-center my-5 my-md-4">*</div>
 
-            <div :class="'col-12 col-md-3 overflow-auto ' + ((mode != 3) ? 'box-center' : 'float-top')">
+            <div :class="'col-12 overflow-auto ' + ((mode != 3) ? 'box-center' : 'float-top')">
                 <div v-if="mode == 1">
                     <div class="d-flex justify-content-center my-1">
                         <span class="box-center">Size: </span>
@@ -38,16 +36,14 @@
                         <input @input="changeMatrixTwoWidth" :value="matrixTwoWidth" class="w-50px form-control" />
                     </div>
 
-                    <div v-for="row in matrixOneWidth" :key="row" class="d-flex">
-                        <span v-for="col in matrixTwoWidth" :key="row + '-' + col" class="mx-1">
-                            <input v-model="matrix2[row - 1][col - 1]" class="w-50px form-control" />
-                        </span>
-                    </div>
-
-                    <center class="my-1">
-                        <button @click="$emit('copy', matrix2)" class="btn btn-success">Copy</button>
-                        <button @click="pasteMatrix('matrix2')" class="btn btn-warning">Paste</button>
-                    </center>
+                    <Matrix 
+                        :matrix="matrix2"
+                        :height="matrixOneWidth"
+                        :width="matrixTwoWidth"
+                        :disabled="false"
+                        @copy="$emit('copy', matrix2)"
+                        @paste="pasteMatrix('matrix2')"
+                    />
                 </div>
 
                 <div v-if="mode == 2">
@@ -60,21 +56,28 @@
             </div>
 
 
-            <div class="col-12 col-md-1 box-center"><button @click="calc()" class="btn btn-primary my-5 my-md-4">=</button></div>
+            <div class="box-center mx-auto"><button @click="calc()" class="btn btn-primary my-5 my-md-4">=</button></div>
 
-            <table class="col-12 col-md-3 box-center">
-                <tr v-for="(nums, row) in answer" :key="row">
-                    <td v-for="(num, col) in nums" :key="row+'-'+col" class="mx-1 w-50px border">
-                        {{ num }}
-                    </td>
-                </tr>
-            </table>
+            <div class="col-12 box-center overflow-auto">
+                <Matrix 
+                    :key="updateKey"
+                    :matrix="answer"
+                    :height="answer.length"
+                    :width="answer[0].length"
+                    :disabled="true"
+                    @copy="$emit('copy', answer)"
+                />
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import Matrix from '@/components/Matrix/Matrix.vue';
 export default {
+    components:{
+        Matrix,
+    },
     data(){
         return {
             mode: 1,
@@ -83,14 +86,16 @@ export default {
             matrixOneWidth: 3,
             matrixTwoWidth: 3,
             matrix2: [],
-            answer: [],
+            answer: [[]],
             k: 1,
             n: 1,
+            updateKey: 0,
         }
     },
     methods:{
         calc(){
             this.answer.length = 0;
+            this.answer[0] = [];
             if(this.mode == 1){
                 for(let i = 0; i < this.matrixOneHeight; i ++){
                     if(!this.answer[i]) this.answer[i] = [];
@@ -100,12 +105,12 @@ export default {
                             let a = this.matrix1[i][j];
                             let b = this.matrix2[j][k];
                             if(isNaN(a) || !a){
-                                this.answer = [];
+                                this.answer = [[]];
                                 alert(`Matrix 1 has non-number value at [${i+1}][${j+1}].`);
                                 return;
                             }
                             if(isNaN(b) || !b){
-                                this.answer = [];
+                                this.answer = [[]];
                                 alert(`Matrix 1 has non-number value at [${j+1}][${k+1}].`);
                                 return;
                             }
@@ -113,7 +118,7 @@ export default {
                         }
                     }
                 }
-                this.$forceUpdate();
+                this.updateKey++;
                 return;
             }
             if(this.mode == 2){
@@ -145,6 +150,7 @@ export default {
                 }
             }
             this.matrixOneHeight = input;
+            this.matrix1.length = input;
         },
         changeMatrixOneWidth(event){
             let input = parseInt(event.target.value);
@@ -160,6 +166,11 @@ export default {
                 }
             }
             this.matrixOneWidth = input;
+            for(let i = 0; i < this.matrixOneWidth; i++){
+                if(!this.matrix1[i]) this.matrix1[i] = [];
+                this.matrix1[i].length = input;
+            }
+            this.matrix2.length = input;
         },
         changeMatrixTwoWidth(event){
             let input = parseInt(event.target.value);
@@ -170,13 +181,13 @@ export default {
             if(input > 10) input = 10;
 
             this.matrixTwoWidth = input;
+            for(let i = 0; i < this.matrixTwoWidth; i++){
+                if(!this.matrix2[i]) this.matrix2[i] = [];
+                this.matrix2[i].length = input;
+            }
         },
         pasteMatrix(matrixName){
-            let copyMatrix = this.$parent.copyMatrix;
-            let matrix = this[matrixName];
-            if(matrix.length == copyMatrix.length && matrix[0].length == copyMatrix[0].length){
-                this[matrixName] = copyMatrix;
-            } else alert("Matrixes's sizes are not match.");
+            this.$emit('paste', { reference: this, matrixName });
         },
     },
     created(){

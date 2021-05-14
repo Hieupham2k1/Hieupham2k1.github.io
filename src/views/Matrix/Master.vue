@@ -7,30 +7,35 @@
         </aside>
 
         <div class="content">
-            <router-view @copy="copyToList" class="mx-5" />
+            <router-view @copy="copyToList" @paste="paste" class="mx-5" />
         </div>
 
         <aside class="right-bar">
-            <div class="my-3 text-center">Saved Matrixes</div>
+            <div class="my-3 text-center">Saved Matrices</div>
             <center v-for="(v, index) in varList" :key="index" class="my-3">
                 <div>
-                    <button @click="copyFromList(index)" class="btn btn-success">Copy</button>
                     <button @click="deleteFromList(index)" class="btn btn-danger">Delete</button>
                 </div>
-                <table class="col-12 col-md-3 box-center overflow-auto">
-                    <tr v-for="(nums, row) in v" :key="row">
-                        <td v-for="(num, col) in nums" :key="row+'-'+col" class="mx-1 w-50px border">
-                            {{ num }}
-                        </td>
-                    </tr>
-                </table>
+                <div class="col-12 box-center overflow-auto" :class="{ 'copied': v === copyMatrix }">
+                    <Matrix 
+                        :matrix="v"
+                        :height="v.length"
+                        :width="v[0].length"
+                        :disabled="true"
+                        @copy="copyFromList(index)"
+                    />
+                </div>
             </center>
         </aside>
     </div>
 </template>
 
 <script>
+import Matrix from '@/components/Matrix/Matrix.vue';
 export default {
+    components:{
+        Matrix,
+    },
     data(){
         return{
             options: {},
@@ -47,11 +52,42 @@ export default {
         },
         copyToList(matrix){
             if(this.varList.length >= 10){
-                alert('Too many copied matrixes, please delete a few from the matrix list on the right.');
+                alert('Too many copied matrices, please delete a few from the matrix list on the right.');
                 return;
             }
-            this.copyMatrix = matrix;
-            this.varList.unshift(matrix);
+            this.copyMatrix = matrix.map(val => [...val]);
+            if(!this.varList.includes(this.copyMatrix)) this.varList.unshift(this.copyMatrix);
+        },
+        paste(data){
+            let { reference, matrixName } = data;
+            let copyMatrix = this.copyMatrix;
+            let matrix = reference[matrixName];
+            if(matrix.length == copyMatrix.length && matrix[0].length == copyMatrix[0].length){
+                reference[matrixName] = copyMatrix.map(val => [...val]);
+            } else alert("Matrixes's sizes are not match.");
+        },
+        getTriangleForm(matrix){
+            let ans = matrix.map(val => [...val]);
+            let k = 0;
+            for(let i = ans.length - 1; i >= k; i--){
+                if(i <= k){
+                    i = ans.length - 1;
+                    k++;
+                }
+                if(ans[k][k] == 0){
+                    for(let j = 0; j < ans[0].length; j++){
+                        ans[k][j] += ans[i][j];
+                    }
+                }
+                let factor = (ans[i][k] == 0 && ans[k][k] == 0) ? 0 : ans[i][k] / ans[k][k];
+
+                if(k >= ans.length - 1 || k > ans[0].length - 1) break;
+
+                for(let j = 0; j < ans[0].length; j++){
+                    ans[i][j] = ans[i][j] - ans[k][j] * factor;
+                }
+            }
+            return ans;
         },
         
     },
@@ -74,12 +110,15 @@ export default {
         margin: 2% 20%;
     }
     .right-bar{
-        width: 20%;
         height: 100%;
         position: absolute;
         right: 0;
         display: flex;
         flex-direction: column;
         overflow: auto;
+    }
+    .copied{
+        border: 1px solid grey;
+        border-radius: 10px;
     }
 </style>
